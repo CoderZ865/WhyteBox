@@ -1,0 +1,4 @@
+tensorflow
+PyOpenGL
+PyOpenGL_accelerate
+numpy
