@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhyteBox - CNN Visualizer</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <!-- Preload TensorFlow.js to ensure it's available -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    <script>
+        // Verify TensorFlow.js is loaded properly
+        window.addEventListener('DOMContentLoaded', () => {
+            if (window.tf) {
+                console.log("TensorFlow.js loaded successfully:", tf.version.tfjs);
+            } else {
+                console.error("TensorFlow.js failed to load. Using fallbacks...");
+            }
+        });
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
