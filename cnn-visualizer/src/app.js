@@ -4,7 +4,8 @@ import CNNModel from './components/CNNModel';
 import ExplainabilityView from './components/ExplainabilityView';
 import LayerVisualizer from './components/LayerVisualizer';
 import UserControls from './components/UserControls';
-import ModelVisualizer from './components/ModelVisualizer';
+// Import the new visualizer instead of TensorSpaceVisualizerponent anymore
+import ThreeJSCNNVisualizer from './components/ThreeJSCNNVisualizer';
 import HomePage from './components/HomePage';
 import BeginnersGuide from './components/BeginnersGuide';
 import './assets/css/styles.css';
@@ -21,17 +22,17 @@ class App extends React.Component {
             currentView: 'home', 
             activeTab: 'visualizer',
             showBeginnersGuide: false,
-            modelName: 'MobileNetV2',
-            availableModels: [],
-            selectedModelType: 'mobilenetv2'
+            modelName: 'MobileNetV2', // Changed default name
+            // Now using MobileNetV2 detailed visualization
+            selectedModelType: 'mobilenetv2-vis'
         };
     }
 
     async componentDidMount() {
         try {
-            console.log("App mounting, loading embedded model by default...");
-            // Always start with the embedded model which is guaranteed to work
-            await this.loadModel('embedded');
+            console.log("App mounting, loading MobileNetV2 model...");
+            // Use the MobileNetV2 visualization model
+            await this.loadModel('mobilenetv2-vis');
         } catch (error) {
             console.error("Error in componentDidMount:", error);
             this.setState({ 
@@ -41,84 +42,44 @@ class App extends React.Component {
         }
     }
 
-    async loadModel(modelType) {
+    async loadModel(modelType = 'mobilenetv2-vis') {
         try {
             this.setState({ 
                 isLoading: true, 
                 error: null,
-                selectedModelType: modelType // Immediately update selected model type
             });
             
-            console.log(`Loading ${modelType} model...`);
-            
-            // Use direct path to local JSON model file
-            const modelPath = modelType === 'custom' ? '/models/pretrainedModel.json' : null;
+            console.log(`Loading MobileNetV2 model...`);
             
             // Create model instance
-            const model = new CNNModel(modelPath);
+            const model = new CNNModel();
             
-            // Get available models to populate UI
-            const availableModels = model.getAvailableModels();
+            // Load the MobileNetV2 visualization model (simplified to only use this model)
+            const loadedModel = await model.loadModel('mobilenetv2-vis');
             
-            // Load the selected model
-            const loadedModel = await model.loadModel(modelType);
-            
-            // Extra check - if we didn't get a model back, throw an error
+            // Error handling
             if (!loadedModel) {
-                throw new Error(`Failed to load ${modelType} model - no model returned`);
+                throw new Error(`Failed to load model - no model returned`);
             }
             
-            // Do a quick validation
             if (!loadedModel.model || !loadedModel.model.layers) {
                 throw new Error("Model loaded but has invalid structure");
             }
             
             // Get layers for visualization
             const layers = model.getLayers().map(layer => layer.type) || [];
-            console.log(`Loaded ${model.getModelName()} model with ${layers.length} layers`);
+            console.log(`Loaded MobileNetV2 model with ${layers.length} layers`);
             
             this.setState({
                 model: model,
                 layers: layers,
-                modelName: model.getModelName(),
+                modelName: 'MobileNetV2', 
                 isLoading: false,
-                availableModels: availableModels,
-                selectedModelType: modelType,
-                error: null // Clear any previous errors
+                selectedModelType: 'mobilenetv2-vis',
+                error: null
             });
         } catch (error) {
             console.error("Error loading model:", error);
-            
-            // Try loading the embedded model as a last resort
-            try {
-                if (modelType !== 'embedded') {
-                    console.log("Trying embedded model as fallback");
-                    const model = new CNNModel();
-                    const availableModels = model.getAvailableModels();
-                    await model.loadModel('embedded');
-                    
-                    const layers = model.getLayers().map(layer => layer.type) || [];
-                    
-                    this.setState({
-                        model: model,
-                        layers: layers,
-                        modelName: model.getModelName(),
-                        isLoading: false,
-                        availableModels: availableModels,
-                        selectedModelType: 'embedded',
-                        error: `Failed to load ${modelType} model. Using built-in model instead.`
-                    });
-                    
-                    // Show a temporary error but don't prevent the app from working
-                    setTimeout(() => {
-                        this.setState({ error: null });
-                    }, 5000);
-                    
-                    return;
-                }
-            } catch (fallbackError) {
-                console.error("Even embedded model failed:", fallbackError);
-            }
             
             this.setState({ 
                 isLoading: false,
@@ -126,11 +87,6 @@ class App extends React.Component {
             });
         }
     }
-
-    handleModelChange = async (modelType) => {
-        console.log("Changing model to:", modelType);
-        await this.loadModel(modelType);
-    };
 
     handleLayerChange = (layer) => {
         console.log("Layer selected:", layer);
@@ -170,16 +126,15 @@ class App extends React.Component {
             currentView, 
             showBeginnersGuide, 
             modelName,
-            availableModels,
             selectedModelType
         } = this.state;
 
         if (isLoading) {
             return (
                 <div className="loading-container">
-                    <p>Loading {modelName} model...</p>
+                    <p>Loading 3D CNN Visualization...</p>
                     <div className="spinner"></div>
-                    <p className="loading-tip">This may take a moment for larger models. If loading fails, try the built-in model option.</p>
+                    <p className="loading-tip">Please wait while we initialize the visualization...</p>
                 </div>
             );
         }
@@ -192,9 +147,9 @@ class App extends React.Component {
                     <div className="error-actions">
                         <button 
                             className="button" 
-                            onClick={() => this.loadModel('mobilenetv2')}
+                            onClick={() => this.loadModel('mobilenetv2-vis')}
                         >
-                            Try Loading MobileNetV2 Instead
+                            Try Again
                         </button>
                         <button 
                             className="button secondary" 
@@ -216,9 +171,6 @@ class App extends React.Component {
                         onViewModelClick={this.handleViewModelClick} 
                         onHelpClick={this.toggleBeginnersGuide}
                         modelName={modelName}
-                        availableModels={availableModels}
-                        selectedModel={selectedModelType}
-                        onModelChange={this.handleModelChange}
                     />
                 ) : (
                     <>
@@ -227,22 +179,12 @@ class App extends React.Component {
                                 <button className="back-button" onClick={this.handleBackToHome}>
                                     &larr; Back to Home
                                 </button>
-                                <h1>{modelName} Visualizer</h1>
+                                <h1>{modelName}</h1>
                                 <button className="help-button" onClick={this.toggleBeginnersGuide}>
                                     Need Help?
                                 </button>
                             </div>
-                            <div className="model-selector">
-                                <label>Select Model: </label>
-                                <select 
-                                    value={selectedModelType} 
-                                    onChange={(e) => this.handleModelChange(e.target.value)}
-                                >
-                                    {availableModels.map(model => (
-                                        <option key={model.id} value={model.id}>{model.name}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            {/* Model dropdown removed */}
                             <div className="tabs">
                                 <button 
                                     className={`tab ${activeTab === 'visualizer' ? 'active' : ''}`}
@@ -266,9 +208,11 @@ class App extends React.Component {
                                     onLayerChange={this.handleLayerChange}
                                     onParameterChange={this.handleParameterChange}
                                 />
-                                {/* Fix: Pass the model data correctly - model is a CNNModel instance, 
-                                    so we need to pass the actual model data */}
-                                <ModelVisualizer modelData={model ? model.model : null} />
+                                <ThreeJSCNNVisualizer 
+                                    model={model} 
+                                    modelType={selectedModelType}
+                                    onLayerSelect={this.handleLayerChange}
+                                />
                             </div>
                         ) : (
                             <div className="visualization">

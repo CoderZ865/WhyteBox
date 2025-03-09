@@ -1,7 +1,7 @@
 {
   "name": "cnn-visualizer",
   "version": "1.0.0",
-  "description": "A web application to visualize convolutional neural networks using Three.js and explainable AI techniques.",
+  "description": "A web application to visualize convolutional neural networks using TensorSpace and explainable AI techniques.",
   "main": "src/app.js",
   "scripts": {
     "start": "webpack serve --open",
@@ -33,6 +33,7 @@
     "visualization",
     "explainable-ai",
     "tensorflow",
+    "tensorspace",
     "web"
   ],
   "author": "Your Name",

@@ -43,6 +43,16 @@ class CNNModel {
                 return this.model;
             }
             
+            // Special case for mobilenetv2 - use our carefully crafted model
+            if (modelType === 'mobilenetv2-vis') {
+                this.log("Using pre-defined MobileNetV2 visualization model");
+                const mobileNetModel = this.createMobileNetV2Model();
+                this.model = mobileNetModel;
+                this.modelType = 'mobilenetv2-vis';
+                this.modelName = 'MobileNetV2';
+                return this.model;
+            }
+            
             // Load the local model file directly first to avoid network issues
             if (modelType === 'custom' || modelType === 'local') {
                 try {
@@ -245,6 +255,291 @@ class CNNModel {
         };
     }
 
+    createMobileNetV2Model() {
+        this.log("Creating MobileNetV2 model");
+        
+        // Define the exact format expected by the visualizer
+        return {
+            model: {
+                name: "MobileNetV2",
+                version: "1.0",
+                layers: [
+                    {
+                        type: "conv2d",
+                        name: "Conv1",
+                        filters: 32,
+                        kernel_size: [3, 3],
+                        strides: [2, 2],
+                        activation: "relu6",
+                        input_shape: [224, 224, 3]
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "bn_Conv1"
+                    },
+                    // First block - expanded conv with depthwise + pointwise (bottleneck)
+                    {
+                        type: "depthwiseConv2d",
+                        name: "expanded_conv_depthwise",
+                        kernel_size: [3, 3],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "expanded_conv_depthwise_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "expanded_conv_depthwise_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "conv2d",
+                        name: "expanded_conv_project",
+                        filters: 16,
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "expanded_conv_project_BN"
+                    },
+                    
+                    // Block 2 - expansion, depthwise, projection
+                    {
+                        type: "conv2d",
+                        name: "block_1_expand",
+                        filters: 96,  // expansion factor 6 from 16 channels
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_1_expand_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_1_expand_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "depthwiseConv2d",
+                        name: "block_1_depthwise",
+                        kernel_size: [3, 3],
+                        strides: [2, 2],  // stride 2 reduces spatial dimensions
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_1_depthwise_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_1_depthwise_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "conv2d",
+                        name: "block_1_project",
+                        filters: 24,  // projection to 24 channels
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_1_project_BN"
+                    },
+                    
+                    // Block 3 - with skip connection (residual)
+                    {
+                        type: "conv2d",
+                        name: "block_2_expand",
+                        filters: 144,  // expansion factor 6 from 24 channels
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_2_expand_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_2_expand_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "depthwiseConv2d",
+                        name: "block_2_depthwise",
+                        kernel_size: [3, 3],
+                        strides: [1, 1],  // stride 1 maintains spatial dimensions for residual
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_2_depthwise_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_2_depthwise_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "conv2d",
+                        name: "block_2_project",
+                        filters: 24,  // projection back to 24 channels for the skip connection
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_2_project_BN"
+                    },
+                    {
+                        type: "add",
+                        name: "block_2_add"
+                    },
+                    
+                    // Block 4 - no skip connection (stride 2)
+                    {
+                        type: "conv2d",
+                        name: "block_3_expand",
+                        filters: 144,  // expansion factor 6 from 24 channels
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_3_expand_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_3_expand_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "depthwiseConv2d",
+                        name: "block_3_depthwise",
+                        kernel_size: [3, 3],
+                        strides: [2, 2],  // stride 2 reduces spatial dimensions
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_3_depthwise_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_3_depthwise_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "conv2d",
+                        name: "block_3_project",
+                        filters: 32,  // projection to 32 channels
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_3_project_BN"
+                    },
+                    
+                    // Block 5 - with skip connection
+                    {
+                        type: "conv2d",
+                        name: "block_4_expand",
+                        filters: 192,  // expansion factor 6 from 32 channels
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_4_expand_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_4_expand_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "depthwiseConv2d",
+                        name: "block_4_depthwise",
+                        kernel_size: [3, 3],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_4_depthwise_BN"
+                    },
+                    {
+                        type: "activation",
+                        name: "block_4_depthwise_relu",
+                        activation: "relu6"
+                    },
+                    {
+                        type: "conv2d",
+                        name: "block_4_project",
+                        filters: 32,
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        padding: "same"
+                    },
+                    {
+                        type: "batchnorm",
+                        name: "block_4_project_BN"
+                    },
+                    {
+                        type: "add",
+                        name: "block_4_add"
+                    },
+                    
+                    // Final layers
+                    {
+                        type: "conv2d",
+                        name: "Conv_1",
+                        filters: 1280,
+                        kernel_size: [1, 1],
+                        strides: [1, 1],
+                        activation: "relu6"
+                    },
+                    {
+                        type: "pooling2d",
+                        name: "global_pool",
+                        pool_size: [7, 7],
+                        pool_type: "avg"
+                    },
+                    {
+                        type: "conv2d",
+                        name: "Conv_2",
+                        filters: 1000,
+                        kernel_size: [1, 1],
+                        strides: [1, 1]
+                    },
+                    {
+                        type: "flatten",
+                        name: "flatten"
+                    },
+                    {
+                        type: "dense",
+                        name: "Logits",
+                        units: 1000,
+                        activation: "softmax"
+                    }
+                ]
+            }
+        };
+    }
+
     // Helper for logging
     log(message) {
         if (this.debug) {
@@ -266,7 +561,6 @@ class CNNModel {
             // Process each layer and extract relevant information
             if (tfModel && tfModel.layers) {
                 this.log(`Processing ${tfModel.layers.length} layers`);
-                
                 modelDescription.layers = tfModel.layers.map((layer, index) => {
                     try {
                         let config = {};
@@ -496,53 +790,62 @@ class CNNModel {
         }));
     }
 
+    // Add a new method to get the model data in the format expected by ModelVisualizer
+    getModelForVisualization() {
+        if (!this.model) {
+            return this.createEmbeddedModel();
+        }
+        
+        // Return our model structure - it should already be in the correct format
+        return this.model;
+    }
+
     async predict(input) {
-        if (this.tfModel) {
-            try {
-                // Process the input - ensure it's a tensor with proper shape
-                let tensor;
-                if (input instanceof tf.Tensor) {
-                    tensor = input;
-                } else if (input instanceof HTMLImageElement) {
-                    // Convert image to tensor
-                    tensor = tf.browser.fromPixels(input)
-                        .resizeBilinear([224, 224]) // Standard input size for most models
-                        .toFloat();
-                        
-                    // Preprocess based on model type
-                    if (this.modelType.includes('mobilenet') || this.modelType.includes('efficientnet')) {
-                        // MobileNet and EfficientNet preprocessing
-                        tensor = tensor.div(127.5).sub(1).expandDims();
-                    } else if (this.modelType.includes('inception')) {
-                        // Inception preprocessing
-                        tensor = tensor.div(255.0).sub(0.5).mul(2.0).expandDims();
-                    } else {
-                        // Default preprocessing for other models
-                        tensor = tensor.div(255.0).expandDims();
-                    }
-                }
-                
-                // Run prediction
-                const result = await this.tfModel.predict(tensor);
-                
-                // Clean up tensors
-                if (!(input instanceof tf.Tensor)) {
-                    tensor.dispose();
-                }
-                
-                return result;
-            } catch (error) {
-                console.error("Error performing prediction:", error);
+        if (!this.tfModel) {
+            console.warn("TensorFlow.js model not available. Cannot make predictions.");
+            return null;
+        }
+        
+        try {
+            // Process the input - ensure it's a tensor with proper shape
+            let tensor;
+            if (input instanceof tf.Tensor) {
+                tensor = input;
+            } else if (input instanceof HTMLImageElement) {
+                tensor = tf.browser.fromPixels(input)
+                    .resizeBilinear([224, 224]) // Standard input size for most models
+                    .toFloat();
+            } else {
                 return null;
             }
-        } else {
-            console.warn("TensorFlow.js model not available. Cannot make predictions.");
+            
+            // Preprocess based on model type
+            if (this.modelType.includes('mobilenet') || this.modelType.includes('efficientnet')) {
+                // MobileNet and EfficientNet preprocessing
+                tensor = tensor.div(127.5).sub(1).expandDims();
+            } else if (this.modelType.includes('inception')) {
+                // Inception preprocessing
+                tensor = tensor.div(255.0).sub(0.5).mul(2.0).expandDims();
+            } else {
+                // Default preprocessing for other models
+                tensor = tensor.div(255.0).expandDims();
+            }
+            
+            // Run prediction
+            const result = await this.tfModel.predict(tensor);
+            
+            // Clean up tensors
+            tensor.dispose();
+            
+            return result;
+        } catch (error) {
+            console.error("Error performing prediction:", error);
             return null;
         }
     }
 
-    // More permissive model structure validation with better error messages
     validateModelStructure(model) {
+        // More permissive model structure validation with better error messages
         if (!model) {
             this.log("Invalid model: model is null or undefined");
             return false;
@@ -581,17 +884,6 @@ class CNNModel {
         
         // As long as we have at least one valid property, consider it valid
         return validProps > 0;
-    }
-
-    // Add a new method to get the model data in the format expected by ModelVisualizer
-    getModelForVisualization() {
-        // Ensure we always return something that can be visualized
-        if (!this.model) {
-            return this.createEmbeddedModel();
-        }
-        
-        // Return our model structure - it should already be in the correct format
-        return this.model;
     }
 }
 

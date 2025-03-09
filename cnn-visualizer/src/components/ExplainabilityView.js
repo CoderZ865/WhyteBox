@@ -1,47 +1,24 @@
 import React from 'react';
-import { fetchFeatureMaps, highlightImportantFeatures } from '../services/xaiService';
 
-class ExplainabilityView extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            featureMaps: [],
-            highlightedFeatures: [],
-        };
-    }
-
-    componentDidMount() {
-        this.loadFeatureMaps();
-    }
-
-    loadFeatureMaps = async () => {
-        const featureMaps = await fetchFeatureMaps(this.props.model);
-        this.setState({ featureMaps });
-    };
-
-    handleHighlightFeatures = () => {
-        const highlightedFeatures = highlightImportantFeatures(this.state.featureMaps);
-        this.setState({ highlightedFeatures });
-    };
-
-    render() {
-        return (
-            <div className="explainability-view">
-                <h2>Explainability View</h2>
-                <button onClick={this.handleHighlightFeatures}>Highlight Important Features</button>
-                <div className="feature-maps">
-                    {this.state.featureMaps.map((map, index) => (
-                        <img key={index} src={map} alt={`Feature Map ${index}`} />
-                    ))}
-                </div>
-                <div className="highlighted-features">
-                    {this.state.highlightedFeatures.map((feature, index) => (
-                        <img key={index} src={feature} alt={`Highlighted Feature ${index}`} />
-                    ))}
-                </div>
-            </div>
-        );
-    }
-}
+const ExplainabilityView = ({ model }) => {
+  return (
+    <div className="explainability-view">
+      <h2>Explainability View</h2>
+      <div className="coming-soon-message">
+        <p>The explainability features are currently in development.</p>
+        <p>This section will provide visual explanations of how MobileNetV2 processes images and makes predictions.</p>
+        <div className="placeholder-feature">
+          <h3>Coming Soon:</h3>
+          <ul>
+            <li>Feature visualization for each layer</li>
+            <li>Activation heatmaps</li>
+            <li>Filter visualization</li>
+            <li>Attribution methods (Grad-CAM, Integrated Gradients)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ExplainabilityView;
