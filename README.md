@@ -2,14 +2,17 @@
 KTU S6 DATASCIENCE MiniProject - CNN Visualizer
 
 ## Overview
-The CNN Visualizer is a web application designed to help users understand convolutional neural networks (CNNs) and the techniques of explainable AI (XAI). This project provides an interactive platform for visualizing CNN architectures, exploring layer functionalities, and understanding how models make predictions.
+The CNN Visualizer is a web application designed to help users understand convolutional neural networks (CNNs), focusing specifically on MobileNetV2 architecture and explainable AI (XAI). This project provides an interactive platform for visualizing CNN architectures in 3D, exploring layer functionalities, and understanding how these efficient models make predictions.
 
 ## Features
-- **Model Visualization**: Load and visualize the architecture of pretrained CNN models in 3D.
-- **Layer Exploration**: Interactively explore individual layers of the CNN and see how they process input data.
-- **Explainable AI Techniques**: Visualize feature maps and highlight important features in the input data to understand model predictions.
-- **User Controls**: Intuitive controls for selecting layers, adjusting parameters, and triggering visualizations.
-- **Beginner-Friendly Guide**: Built-in guidance for users new to CNNs and deep learning concepts.
+- **3D Model Visualization**: Interactive 3D visualization of MobileNetV2's architecture with detailed layer representation
+- **Layer Interaction**: Click on individual layers to view detailed information about their purpose, parameters, and role
+- **Performance Metrics**: Compare MobileNetV2's efficiency with other popular CNN architectures (ResNet50, VGG16, etc.)
+- **Educational Content**: Interactive MobileNetV2 architecture explainer with visual diagrams
+- **Data Flow Animation**: Visualize how data flows through the neural network
+- **Interactive Elements**: Rotate, zoom, and navigate the 3D model visualization
+- **Efficiency Insights**: Understand how MobileNetV2's design choices (depthwise separable convolutions, inverted residuals, etc.) impact efficiency
+- **Beginner-Friendly Guide**: Built-in guidance for users new to CNNs and deep learning concepts
 
 ## Project Structure
 ```
