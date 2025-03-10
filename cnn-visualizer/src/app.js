@@ -4,10 +4,10 @@ import CNNModel from './components/CNNModel';
 import ExplainabilityView from './components/ExplainabilityView';
 import LayerVisualizer from './components/LayerVisualizer';
 import UserControls from './components/UserControls';
-// Import the new visualizer instead of TensorSpaceVisualizerponent anymore
 import ThreeJSCNNVisualizer from './components/ThreeJSCNNVisualizer';
 import HomePage from './components/HomePage';
 import BeginnersGuide from './components/BeginnersGuide';
+import ExplainabilityDocs from './components/ExplainabilityDocs';
 import './assets/css/styles.css';
 
 class App extends React.Component {
@@ -19,15 +19,14 @@ class App extends React.Component {
             selectedLayer: null,
             isLoading: true,
             error: null,
-            currentView: 'home', 
+            currentView: 'home',
             activeTab: 'visualizer',
             showBeginnersGuide: false,
-            modelName: 'MobileNetV2', // Changed default name
             // Now using MobileNetV2 detailed visualization
             selectedModelType: 'mobilenetv2-vis'
         };
     }
-
+    
     async componentDidMount() {
         try {
             console.log("App mounting, loading MobileNetV2 model...");
@@ -35,25 +34,23 @@ class App extends React.Component {
             await this.loadModel('mobilenetv2-vis');
         } catch (error) {
             console.error("Error in componentDidMount:", error);
-            this.setState({ 
+            this.setState({
                 isLoading: false,
                 error: "Failed to initialize the application: " + error.message
             });
         }
     }
-
+    
     async loadModel(modelType = 'mobilenetv2-vis') {
         try {
             this.setState({ 
                 isLoading: true, 
-                error: null,
+                error: null
             });
             
             console.log(`Loading MobileNetV2 model...`);
-            
             // Create model instance
             const model = new CNNModel();
-            
             // Load the MobileNetV2 visualization model (simplified to only use this model)
             const loadedModel = await model.loadModel('mobilenetv2-vis');
             
@@ -73,21 +70,20 @@ class App extends React.Component {
             this.setState({
                 model: model,
                 layers: layers,
-                modelName: 'MobileNetV2', 
+                modelName: 'MobileNetV2',
                 isLoading: false,
                 selectedModelType: 'mobilenetv2-vis',
                 error: null
             });
         } catch (error) {
             console.error("Error loading model:", error);
-            
             this.setState({ 
                 isLoading: false,
                 error: `Failed to load model: ${error.message}`
             });
         }
     }
-
+    
     handleLayerChange = (layer) => {
         console.log("Layer selected:", layer);
         this.setState({ selectedLayer: layer });
@@ -184,7 +180,6 @@ class App extends React.Component {
                                     Need Help?
                                 </button>
                             </div>
-                            {/* Model dropdown removed */}
                             <div className="tabs">
                                 <button 
                                     className={`tab ${activeTab === 'visualizer' ? 'active' : ''}`}
@@ -215,11 +210,7 @@ class App extends React.Component {
                                 />
                             </div>
                         ) : (
-                            <div className="visualization">
-                                <LayerVisualizer 
-                                    model={model} 
-                                    onLayerSelect={this.handleLayerChange}
-                                />
+                            <div className="explainability-container">
                                 <ExplainabilityView 
                                     model={model}
                                 />

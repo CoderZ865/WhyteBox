@@ -885,6 +885,30 @@ class CNNModel {
         // As long as we have at least one valid property, consider it valid
         return validProps > 0;
     }
+
+    // Create a simple TF.js model for testing explainability features
+    createSimpleTFModel() {
+        const input = tf.input({shape: [224, 224, 3]});
+        const conv1 = tf.layers.conv2d({
+            filters: 16,
+            kernelSize: 3,
+            padding: 'same',
+            activation: 'relu',
+            name: 'conv1'
+        }).apply(input);
+        const pool1 = tf.layers.maxPooling2d({poolSize: 2, name: 'pool1'}).apply(conv1);
+        const conv2 = tf.layers.conv2d({
+            filters: 32,
+            kernelSize: 3,
+            padding: 'same',
+            activation: 'relu',
+            name: 'conv2'
+        }).apply(pool1);
+        const pool2 = tf.layers.maxPooling2d({poolSize: 2, name: 'pool2'}).apply(conv2);
+        const flatten = tf.layers.flatten({name: 'flatten'}).apply(pool2);
+        const dense = tf.layers.dense({units: 10, activation: 'softmax', name: 'dense'}).apply(flatten);
+        return tf.model({inputs: input, outputs: dense});
+    }
 }
 
 export default CNNModel;
